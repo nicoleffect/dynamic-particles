@@ -799,6 +799,37 @@ var dynamicParticles = (function () {
 
 	  return false;
 	}
+	/**
+	 * 函数节流方法
+	 * @param Function fn 延时调用函数
+	 * @param Number delay 延迟多长时间
+	 * @param Number atLeast 至少多长时间触发一次
+	 * @return Function 延迟执行的方法
+	 */
+
+	function throttle(func) {
+	  var delay = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 500;
+	  var atLeast = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1000;
+	  var timer = null;
+	  var previous = null;
+	  return function () {
+	    var context = this;
+	    var args = arguments;
+	    var now = +new Date();
+	    if (!previous) previous = now;
+
+	    if (now - previous > atLeast) {
+	      func.apply(context, args); // 重置上一次开始时间为本次结束时间
+
+	      previous = now;
+	    } else {
+	      clearTimeout(timer);
+	      timer = setTimeout(function () {
+	        func.apply(context, args);
+	      }, delay);
+	    }
+	  };
+	}
 
 	var Dot =
 	/*#__PURE__*/
@@ -970,23 +1001,25 @@ var dynamicParticles = (function () {
 	      this.onMove(canvas);
 	    }
 
-	    window.onresize = function () {
-	      _this2.setRectData({
-	        canvas: canvas,
-	        isConnect: isConnect,
-	        isOnClick: isOnClick,
-	        isOnMove: isOnMove
-	      });
-	    };
+	    window.onresize = throttle(function () {
+	      var _this2$cacheRect = _this2.cacheRect,
+	          d = _this2$cacheRect.d,
+	          cw = _this2$cacheRect.cw,
+	          ch = _this2$cacheRect.ch,
+	          animId = _this2$cacheRect.animId;
+	      var cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
+	      cancelAnimationFrame(animId);
+
+	      _this2.ctx.clearRect(-d, -d, cw, ch); // this.setRectData({ canvas, isConnect})
+
+	    });
 	  }
 
 	  createClass(DynamicParticles, [{
 	    key: "setRectData",
 	    value: function setRectData(_ref2) {
 	      var canvas = _ref2.canvas,
-	          isConnect = _ref2.isConnect,
-	          isOnClick = _ref2.isOnClick,
-	          isOnMove = _ref2.isOnMove;
+	          isConnect = _ref2.isConnect;
 
 	      var _canvasRetina = canvasRetina$1(canvas),
 	          ctx = _canvasRetina.ctx,
@@ -997,6 +1030,7 @@ var dynamicParticles = (function () {
 	      var _this$rect = this.rect,
 	          width = _this$rect.width,
 	          height = _this$rect.height;
+	      console.log(width, height);
 	      this.dots_count = Math.floor(width * height / (this.dots_distance * 160));
 	      this.dots_arr = [];
 
@@ -1033,6 +1067,12 @@ var dynamicParticles = (function () {
 	      var d = this.dots_distance;
 	      var cw = width + d;
 	      var ch = height + d;
+	      this.cacheRect = {
+	        d: d,
+	        cw: cw,
+	        ch: ch,
+	        animId: ''
+	      };
 	      return function _animateUpdate() {
 	        _this.ctx.clearRect(-d, -d, cw, ch); // clear canvas
 
@@ -1076,7 +1116,8 @@ var dynamicParticles = (function () {
 	            });
 	          }
 	        });
-	        requestAnimFrame(_animateUpdate);
+	        var animId = requestAnimFrame(_animateUpdate);
+	        _this.cacheRect.animId = animId;
 	      }();
 	    }
 	  }, {

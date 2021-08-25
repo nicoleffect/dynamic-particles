@@ -1,5 +1,5 @@
 import Dot from './Dot'
-import { isMobile } from './utils'
+import { isMobile,throttle } from './utils'
 import canvasRetina from '@nicoleffect/canvas-retina'
 
 class DynamicParticles {
@@ -17,12 +17,21 @@ class DynamicParticles {
       this.onMove(canvas)
     }
 
-    window.onresize = ()=>{
-      this.setRectData({ canvas, isConnect, isOnClick, isOnMove})
-    }
+    window.onresize = throttle(()=>{
+      const {
+        d,
+        cw,
+        ch,
+        animId
+      } = this.cacheRect
+      const cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame
+      cancelAnimationFrame(animId)
+      this.ctx.clearRect(-d, -d, cw, ch)
+      // this.setRectData({ canvas, isConnect})
+    })
   }
 
-  setRectData({ canvas, isConnect, isOnClick, isOnMove}){
+  setRectData({ canvas, isConnect }){
     const {
       ctx,
       rect
@@ -33,7 +42,7 @@ class DynamicParticles {
       width,
       height
     } = this.rect
-
+    console.log(width,height)
     this.dots_count = Math.floor(width * height / (this.dots_distance * 160))
     this.dots_arr = []
 
@@ -59,7 +68,12 @@ class DynamicParticles {
     const d = this.dots_distance
     const cw = width + d
     const ch = height + d
-
+    this.cacheRect = {
+      d,
+      cw,
+      ch,
+      animId: ''
+    }
     return (function _animateUpdate () {
       _this.ctx.clearRect(-d, -d, cw, ch) // clear canvas
       const arr = _this.dots_arr
@@ -100,7 +114,9 @@ class DynamicParticles {
         }
       })
 
-      requestAnimFrame(_animateUpdate)
+      const animId = requestAnimFrame(_animateUpdate)
+      _this.cacheRect.animId  = animId
+
     })()
   }
   onClick (canvas) {
