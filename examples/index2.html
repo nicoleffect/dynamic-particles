@@ -37,9 +37,10 @@
 
 <body>
   <canvas id="canvas"></canvas>
-  <script src="../dist/dynamic-particles.iife.min.js"></script>
+  <script src="../dist/dynamic-particles.iife.js"></script>
   <script>
-    dynamicParticles({ canvas: document.getElementById('canvas') ,isConnect: false, r: 6});
+    dynamicParticles({ canvas: document.getElementById('canvas'), dotRadius: 6, isConnect: false})
+
   </script>
 </body>
 

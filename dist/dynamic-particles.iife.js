@@ -838,12 +838,10 @@ var dynamicParticles = (function () {
 	    var ctx = _ref.ctx,
 	        rect = _ref.rect,
 	        color = _ref.color,
-	        r = _ref.r,
-	        d = _ref.d,
-	        _ref$tx = _ref.tx,
-	        tx = _ref$tx === void 0 ? '' : _ref$tx,
-	        _ref$ty = _ref.ty,
-	        ty = _ref$ty === void 0 ? '' : _ref$ty;
+	        radius = _ref.radius,
+	        distance = _ref.distance,
+	        tx = _ref.tx,
+	        ty = _ref.ty;
 
 	    classCallCheck(this, Dot);
 
@@ -851,27 +849,36 @@ var dynamicParticles = (function () {
 
 	    this.rect = rect; // canvas rect
 
-	    this.r = r; // radius for a basic dot
+	    this.radius = radius; // radius for a basic dot
 
 	    this.color = color; // color for dot
 
-	    this.d = d;
-	    this.dot = {};
+	    this.distance = distance;
+	    this.dot = {
+	      x: 0,
+	      y: 0,
+	      r: 0,
+	      sx: 0,
+	      sy: 0
+	    };
 	    this.init(tx, ty);
 	  }
 
 	  createClass(Dot, [{
 	    key: "init",
-	    value: function init() {
-	      var tx = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-	      var ty = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '';
+	    value: function init(tx, ty) {
+	      var _this$rect = this.rect,
+	          width = _this$rect.width,
+	          height = _this$rect.height;
 	      this.dot = getDot({
-	        rect: this.rect,
-	        r: this.r,
+	        width: width,
+	        height: height,
+	        r: this.radius,
+	        color: this.color,
 	        x: tx,
 	        y: ty
 	      });
-	      paintDot.call(this.ctx, this.dot, this.color);
+	      paintDot.call(this.ctx, this.dot);
 	    }
 	  }, {
 	    key: "update",
@@ -879,57 +886,54 @@ var dynamicParticles = (function () {
 	      var _this$dot = this.dot,
 	          x = _this$dot.x,
 	          y = _this$dot.y,
-	          r = _this$dot.r,
 	          sx = _this$dot.sx,
-	          sy = _this$dot.sy; // console.log(x, y)
-	      // out
-
+	          sy = _this$dot.sy;
 	      var nx = x + sx;
 	      var ny = y + sy;
 
-	      if (isOutside(nx, ny, this.d, this.rect)) {
-	        callback && callback(); // this.init()
-
+	      if (isOutside(nx, ny, this.distance, this.rect)) {
+	        callback && callback();
 	        return;
 	      }
 
 	      this.dot.x = nx;
 	      this.dot.y = ny; // console.log(sx, sy)
 
-	      paintDot.call(this.ctx, this.dot, this.color);
+	      paintDot.call(this.ctx, this.dot);
 	    }
 	  }]);
 
 	  return Dot;
 	}();
 
-	function paintDot(dot, color) {
-	  // console.log(dot)
+	function paintDot(dot) {
 	  var x = dot.x,
 	      y = dot.y,
-	      r = dot.r;
-	  this.fillStyle = 'rgba(' + color + ', 0.8)';
+	      r = dot.r,
+	      color = dot.color;
+	  this.fillStyle = color;
 	  this.beginPath();
-	  this.arc(x, y, r, 0, Math.PI * 2);
+	  this.arc(x, y, r, 0, Math.PI * 2, false);
 	  this.fill();
 	  this.closePath();
 	}
 
 	function getDot(_ref2) {
-	  var rect = _ref2.rect,
+	  var width = _ref2.width,
+	      height = _ref2.height,
 	      r = _ref2.r,
+	      color = _ref2.color,
 	      _ref2$x = _ref2.x,
 	      x = _ref2$x === void 0 ? '' : _ref2$x,
 	      _ref2$y = _ref2.y,
 	      y = _ref2$y === void 0 ? '' : _ref2$y;
-	  var width = rect.width,
-	      height = rect.height;
 	  return {
 	    x: x || Math.random() * width,
 	    y: y || Math.random() * height,
+	    r: Math.random() * r,
 	    sx: Math.random() * 2 - 1,
 	    sy: Math.random() * 2 - 1,
-	    r: Math.random() * r
+	    color: color
 	  };
 	}
 
@@ -974,24 +978,28 @@ var dynamicParticles = (function () {
 	    var _this2 = this;
 
 	    var canvas = _ref.canvas,
-	        color = _ref.color,
-	        r = _ref.r,
 	        distance = _ref.distance,
+	        dotRadius = _ref.dotRadius,
+	        dotColor = _ref.dotColor,
+	        lineWidth = _ref.lineWidth,
+	        lineColor = _ref.lineColor,
 	        isConnect = _ref.isConnect,
 	        isOnClick = _ref.isOnClick,
 	        isOnMove = _ref.isOnMove;
 
 	    classCallCheck(this, DynamicParticles);
 
-	    this.color = color;
-	    this.r = r;
-	    this.dots_distance = distance;
-	    this.setRectData({
-	      canvas: canvas,
-	      isConnect: isConnect,
-	      isOnClick: isOnClick,
-	      isOnMove: isOnMove
-	    });
+	    this.distance = distance;
+	    this.dotColor = dotColor;
+	    this.dotRadius = dotRadius;
+	    this.lineWidth = lineWidth;
+	    this.lineColor = lineColor || dotColor;
+	    this.rectt = null;
+	    this.ctx = null;
+	    this.dotsArr = [];
+	    this.dotsCount = 100;
+	    this.setRectData(canvas);
+	    this.anim(isConnect);
 
 	    if (isOnClick) {
 	      this.onClick(canvas);
@@ -1003,24 +1011,23 @@ var dynamicParticles = (function () {
 
 	    window.onresize = throttle(function () {
 	      var _this2$cacheRect = _this2.cacheRect,
-	          d = _this2$cacheRect.d,
 	          cw = _this2$cacheRect.cw,
 	          ch = _this2$cacheRect.ch,
 	          animId = _this2$cacheRect.animId;
 	      var cancelAnimationFrame = window.cancelAnimationFrame || window.webkitCancelAnimationFrame || window.msCancelAnimationFrame;
 	      cancelAnimationFrame(animId);
 
-	      _this2.ctx.clearRect(-d, -d, cw, ch); // this.setRectData({ canvas, isConnect})
+	      _this2.ctx.clearRect(-distance, -distance, cw, ch);
 
+	      _this2.setRectData(canvas);
+
+	      _this2.anim(isConnect);
 	    });
 	  }
 
 	  createClass(DynamicParticles, [{
 	    key: "setRectData",
-	    value: function setRectData(_ref2) {
-	      var canvas = _ref2.canvas,
-	          isConnect = _ref2.isConnect;
-
+	    value: function setRectData(canvas) {
 	      var _canvasRetina = canvasRetina$1(canvas),
 	          ctx = _canvasRetina.ctx,
 	          rect = _canvasRetina.rect;
@@ -1031,14 +1038,11 @@ var dynamicParticles = (function () {
 	          width = _this$rect.width,
 	          height = _this$rect.height;
 	      console.log(width, height);
-	      this.dots_count = Math.floor(width * height / (this.dots_distance * 160));
-	      this.dots_arr = [];
+	      this.dotsCount = Math.floor(width * height / 2 / Math.pow(this.distance, 2));
 
-	      for (var i = 0; i < this.dots_count; i++) {
+	      for (var i = 0; i < this.dotsCount; i++) {
 	        this.initDot();
 	      }
-
-	      this.anim(isConnect);
 	    }
 	  }, {
 	    key: "initDot",
@@ -1046,13 +1050,13 @@ var dynamicParticles = (function () {
 	      var dot = new Dot({
 	        ctx: this.ctx,
 	        rect: this.rect,
-	        d: this.dots_distance,
-	        color: this.color,
-	        r: this.r,
+	        distance: this.distance,
+	        color: this.dotColor,
+	        radius: this.dotRadius,
 	        tx: tx,
 	        ty: ty
 	      });
-	      this.dots_arr.push(dot); // console.log(this.dots_arr)
+	      this.dotsArr.push(dot); // console.log(this.dots_arr)
 	    }
 	  }, {
 	    key: "anim",
@@ -1064,11 +1068,10 @@ var dynamicParticles = (function () {
 	      var _this$rect2 = this.rect,
 	          width = _this$rect2.width,
 	          height = _this$rect2.height;
-	      var d = this.dots_distance;
+	      var d = this.distance;
 	      var cw = width + d;
 	      var ch = height + d;
 	      this.cacheRect = {
-	        d: d,
 	        cw: cw,
 	        ch: ch,
 	        animId: ''
@@ -1077,27 +1080,27 @@ var dynamicParticles = (function () {
 	        _this.ctx.clearRect(-d, -d, cw, ch); // clear canvas
 
 
-	        var arr = _this.dots_arr;
-	        arr.forEach(function (item_i, i) {
-	          item_i.update(function () {
-	            if (arr.length > _this.dots_count) {
-	              arr.splice(i, 1);
+	        var arr = _this.dotsArr;
+	        arr.forEach(function (itemI, idx) {
+	          itemI.update(function () {
+	            if (arr.length > _this.dotsCount) {
+	              arr.splice(idx, 1);
 	            } else {
-	              item_i.init();
+	              itemI.init();
 	            }
 	          });
 
 	          if (isConnect) {
 	            var cache = toConsumableArray(arr);
 
-	            cache.splice(i, 1);
-	            cache.forEach(function (item_j, j) {
-	              var dot_i = item_i.dot;
-	              var dot_j = item_j.dot;
-	              var ix = dot_i.x;
-	              var iy = dot_i.y;
-	              var jx = dot_j.x;
-	              var jy = dot_j.y; // console.log(arr[i])
+	            cache.splice(idx, 1);
+	            cache.forEach(function (itemJ) {
+	              var dotI = itemI.dot;
+	              var dotJ = itemJ.dot;
+	              var ix = dotI.x;
+	              var iy = dotI.y;
+	              var jx = dotJ.x;
+	              var jy = dotJ.y; // console.log(arr[i])
 
 	              var s = Math.sqrt(Math.pow(ix - jx, 2) + Math.pow(iy - jy, 2)); // right triangle
 	              // console.log(s, d)
@@ -1108,8 +1111,8 @@ var dynamicParticles = (function () {
 	                ctx.beginPath();
 	                ctx.moveTo(ix, iy);
 	                ctx.lineTo(jx, jy);
-	                ctx.strokeStyle = "rgba(".concat(_this.color, ",").concat(Math.round((d - s) / d * 10) / 10, ")");
-	                ctx.strokeWidth = 1;
+	                ctx.strokeStyle = _this.lineColor;
+	                ctx.strokeWidth = _this.lineWidth;
 	                ctx.stroke();
 	                ctx.closePath();
 	              }
@@ -1131,14 +1134,9 @@ var dynamicParticles = (function () {
 	        // console.log(e)
 	        var touch = isMobile ? e.touches[0] : e;
 	        var tx = touch.pageX;
-	        var ty = touch.pageY; // if (isOutside(tx, ty, this.dots_distance, this.rect)) {
-	        //   return
-	        // }
+	        var ty = touch.pageY;
 
-	        _this3.initDot(tx, ty); // if (this.dots_arr.length > this.dots_count) {
-	        //   this.dots_arr.shift()
-	        // }
-
+	        _this3.initDot(tx, ty);
 	      };
 
 	      canvas.addEventListener(event, _createDot);
@@ -1148,25 +1146,23 @@ var dynamicParticles = (function () {
 	    value: function onMove(canvas) {
 	      var _this4 = this;
 
-	      var e_down = isMobile ? 'touchstart' : 'mousedown';
-	      var e_move = isMobile ? 'touchmove' : 'mousemove';
-	      var e_up = isMobile ? 'touchend' : 'mouseup';
+	      var eDown = isMobile ? 'touchstart' : 'mousedown';
+	      var eMove = isMobile ? 'touchmove' : 'mousemove';
+	      var eUp = isMobile ? 'touchend' : 'mouseup';
 
 	      var _moveDot = function _moveDot(e) {
 	        var touch = isMobile ? e.touches[0] : e;
 	        var tx = touch.pageX;
-	        var ty = touch.pageY; // if (isOutside(tx, ty, this.dots_distance, this.rect)) {
-	        //   return
-	        // }
+	        var ty = touch.pageY;
 
-	        _this4.dots_arr[_this4.dots_arr.length - 1].init(tx, ty);
+	        _this4.dotsArr[_this4.dotsArr.length - 1].init(tx, ty);
 	      };
 
-	      canvas.addEventListener(e_down, function () {
-	        canvas.addEventListener(e_move, _moveDot);
+	      canvas.addEventListener(eDown, function () {
+	        canvas.addEventListener(eMove, _moveDot);
 	      });
-	      canvas.addEventListener(e_up, function () {
-	        canvas.removeEventListener(e_move, _moveDot);
+	      canvas.addEventListener(eUp, function () {
+	        canvas.removeEventListener(eMove, _moveDot);
 	      });
 	    }
 	  }]);
@@ -1176,12 +1172,15 @@ var dynamicParticles = (function () {
 
 	function dynamicParticles(_ref) {
 	  var canvas = _ref.canvas,
-	      _ref$color = _ref.color,
-	      color = _ref$color === void 0 ? '255, 255, 255' : _ref$color,
-	      _ref$r = _ref.r,
-	      r = _ref$r === void 0 ? 3 : _ref$r,
 	      _ref$distance = _ref.distance,
-	      distance = _ref$distance === void 0 ? 80 : _ref$distance,
+	      distance = _ref$distance === void 0 ? 90 : _ref$distance,
+	      _ref$dotRadius = _ref.dotRadius,
+	      dotRadius = _ref$dotRadius === void 0 ? 4 : _ref$dotRadius,
+	      _ref$dotColor = _ref.dotColor,
+	      dotColor = _ref$dotColor === void 0 ? 'rgba(255, 255, 255, 0.8)' : _ref$dotColor,
+	      _ref$lineWidth = _ref.lineWidth,
+	      lineWidth = _ref$lineWidth === void 0 ? 1 : _ref$lineWidth,
+	      lineColor = _ref.lineColor,
 	      _ref$isConnect = _ref.isConnect,
 	      isConnect = _ref$isConnect === void 0 ? true : _ref$isConnect,
 	      _ref$isOnClick = _ref.isOnClick,
@@ -1190,9 +1189,11 @@ var dynamicParticles = (function () {
 	      isOnMove = _ref$isOnMove === void 0 ? true : _ref$isOnMove;
 	  return new DynamicParticles({
 	    canvas: canvas,
-	    color: color,
-	    r: r,
 	    distance: distance,
+	    dotRadius: dotRadius,
+	    dotColor: dotColor,
+	    lineWidth: lineWidth,
+	    lineColor: lineColor,
 	    isConnect: isConnect,
 	    isOnClick: isOnClick,
 	    isOnMove: isOnMove
