@@ -10,11 +10,6 @@ class DynamicParticles {
     this.lineWidth = lineWidth
     this.lineColor = lineColor || dotColor
 
-    this.rectt = null
-    this.ctx = null
-    this.dotsArr = []
-    this.dotsCount = 100
-
     this.setRectData(canvas)
     this.anim(isConnect)
 
@@ -40,6 +35,10 @@ class DynamicParticles {
   }
 
   setRectData(canvas){
+    this.rectt = null
+    this.ctx = null
+    this.dotsArr = []
+    this.dotsCount = 100
     const {
       ctx,
       rect
@@ -52,7 +51,6 @@ class DynamicParticles {
     } = this.rect
     console.log(width,height)
     this.dotsCount = Math.floor(width * height / 2 /Math.pow(this.distance,2))
-
     for (let i = 0; i < this.dotsCount; i++) {
       this.initDot()
     }

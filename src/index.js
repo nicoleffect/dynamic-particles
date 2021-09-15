@@ -3,8 +3,8 @@ import DynamicParticles from './DynamicParticles'
 
 function dynamicParticles ({
   canvas,
-  distance = 90, // 90px
-  dotRadius = 4, // 4px
+  distance = 100, // 90px
+  dotRadius = 3, // 2px
   dotColor = 'rgba(255, 255, 255, 0.8)', // or #000000
   lineWidth = 1, // 1px
   lineColor, // or #000000
