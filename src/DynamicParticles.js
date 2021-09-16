@@ -1,5 +1,5 @@
 import Dot from './Dot'
-import { isMobile,throttle } from './utils'
+import { isMobile, debounce } from './utils'
 import canvasRetina from '@nicoleffect/canvas-retina'
 
 class DynamicParticles {
@@ -20,7 +20,7 @@ class DynamicParticles {
       this.onMove(canvas)
     }
 
-    window.onresize = throttle(()=>{
+    window.onresize = debounce(()=>{
       const {
         cw,
         ch,
