@@ -21,8 +21,8 @@ import dynamicParticles from '@nicoleffect/dynamic-particles'
   distance: 80, // 80px, default,distance from dot to dot
   dotColor: 'rgba(255, 255, 255, 0.8)', // or #000000
   dotRadius: 3, // 3px, default
-  lineWidth = 1, // 1px, default
-  lineColor: 'rgba(255, 255, 255, 0.8), // default as dotColor
+  lineWidth：1, // 1px, default
+  lineColor: 'rgba(255, 255, 255, 0.8)‘, // default as dotColor
   isConnect: true, // default, if you don't need lines, set it false
   isOnClick: true, // default, event for click or touchstart
   isOnMove: true // default

@@ -1,5 +1,5 @@
 /*!
- * @nicoleffect/dynamic-particles v1.0.0
+ * @nicoleffect/dynamic-particles v1.0.1
  * (c) 2021 Nicole Wong
  * Released under the MIT License.
  */
