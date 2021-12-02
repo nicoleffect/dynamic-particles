@@ -1,1 +1,1 @@
-module.exports = require("./publish/index.js")
+module.exports = require("./lib/index.js")
