@@ -18,7 +18,7 @@ import dynamicParticles from '@nicoleffect/dynamic-particles'
 
  dynamicParticles({
   canvas: document.getElementById('canvas'), // required
-  distance: 80, // 80px, default,distance of dot to dot
+  distance: 80, // 80px, default,distance from dot to dot
   dotColor: 'rgba(255, 255, 255, 0.8)', // or #000000
   dotRadius: 3, // 3px, default
   lineWidth = 1, // 1px, default

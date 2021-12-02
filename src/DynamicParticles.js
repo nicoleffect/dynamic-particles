@@ -49,7 +49,7 @@ class DynamicParticles {
       width,
       height
     } = this.rect
-    console.log(width,height)
+
     this.dotsCount = Math.floor(width * height / 2 /Math.pow(this.distance,2))
     for (let i = 0; i < this.dotsCount; i++) {
       this.initDot()
@@ -67,7 +67,6 @@ class DynamicParticles {
       ty
     })
     this.dotsArr.push(dot)
-    // console.log(this.dots_arr)
   }
 
   anim (isConnect) {
