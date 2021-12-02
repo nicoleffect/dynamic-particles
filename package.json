@@ -1,6 +1,6 @@
 {
   "name": "@nicoleffect/dynamic-particles",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "dynamic particles, connect dots line",
   "scripts": {
     "dev": "rollup -c --environment NODE_ENV:dev -w",
